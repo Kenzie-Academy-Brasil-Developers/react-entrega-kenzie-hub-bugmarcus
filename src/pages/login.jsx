@@ -1,6 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import Logo from "../../public/Logo.svg";
+import { Link } from "react-router-dom";
 
 const FormCard = ({ onSubmit }) => {
   const {
@@ -33,22 +34,13 @@ const FormCard = ({ onSubmit }) => {
         <input
           type="password"
           id="password"
-          {...register("password", {
-            required: "Campo obrigatório",
-            minLength: {
-              value: 6,
-              message: "A senha deve ter pelo menos 6 caracteres",
-            },
-            pattern: {
-              value: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}$/,
-              message:
-                "A senha deve conter pelo menos uma letra maiúscula, uma letra minúscula e um número",
-            },
-          })}
+          {...register("password", { required: "Campo obrigatório" })}
         />
         {errors && errors.password && <span>{errors.password.message}</span>}
 
-        <button type="submit">Enviar</button>
+        <button type="submit">Entrar</button>
+        <h3>Ainda não possui uma conta?</h3>
+        <Link to="/register">Register</Link>
       </form>
     </div>
   );
