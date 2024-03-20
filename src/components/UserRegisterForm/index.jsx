@@ -1,67 +1,110 @@
 import React from "react";
+import axios from "axios";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const FormCard = ({ onSubmit }) => {
-  const { handleSubmit, register, errors } = useForm();
+const signupSchema = z
+  .object({
+    name: z.string().min(1, "Nome é obrigatório"),
+    email: z.string().email("Email inválido").min(1, "Email é obrigatório"),
+    password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+    confirmPassword: z.string().min(1, "Confirmação de senha é obrigatória"),
+    bio: z.string().min(1, "Bio é obrigatória"),
+    contact: z.string().min(1, "Contato é obrigatório"),
+    course_module: z.string().min(1, "Módulo do curso é obrigatório"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Senhas não conferem",
+    path: ["confirmPassword"],
+  });
 
-  const handleFormSubmit = async (data) => {
+const FormCard = () => {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+    setError,
+  } = useForm({
+    resolver: zodResolver(signupSchema),
+  });
+
+  const onSubmit = async (data) => {
     try {
-      await onSubmit(data);
-      // Redirecionamento ou outras ações após o envio bem-sucedido
+      const { confirmPassword, ...userData } = data;
+      await axios.post("https://kenziehub.herokuapp.com/users", userData);
+      toast.success("Registro feito com sucesso!");
+      reset();
     } catch (error) {
-      // Tratar erros, exibir mensagens, etc.
+      console.error(error.response.data);
+      if (error.response && error.response.data) {
+        setError("apiError", {
+          type: "manual",
+          message: error.response.data.message,
+        });
+        toast.error(`Erro no registro: ${error.response.data.message}`);
+      }
     }
   };
 
   return (
     <div>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <label htmlFor="nome">Nome:</label>
-        <input
-          type="text"
-          id="nome"
-          {...register("nome", { required: "Campo obrigatório" })}
-        />
-        {errors && errors.nome && <span>{errors.nome.message}</span>}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <label htmlFor="name">Nome:</label>
+        <input id="name" type="text" {...register("name")} />
+        {errors.name && <span>{errors.name.message}</span>}
+
         <label htmlFor="email">E-mail:</label>
+        <input id="email" type="email" {...register("email")} />
+        {errors.email && <span>{errors.email.message}</span>}
+
+        <label htmlFor="password">Senha:</label>
+        <input id="password" type="password" {...register("password")} />
+        {errors.password && <span>{errors.password.message}</span>}
+
+        <label htmlFor="confirmPassword">Confirmar senha:</label>
         <input
-          type="text"
-          id="email"
-          {...register("email", { required: "Campo obrigatório" })}
-        />
-        {errors && errors.email && <span>{errors.email.message}</span>}
-        <label htmlFor="senha">Senha:</label>
-        <input
+          id="confirmPassword"
           type="password"
-          id="senha"
-          {...register("senha", { required: "Campo obrigatório" })}
+          {...register("confirmPassword")}
         />
-        {errors && errors.senha && <span>{errors.senha.message}</span>}
-        <label htmlFor="confirmarsenha">Confirmar senha:</label>
-        <input
-          type="password"
-          id="confirmarsenha"
-          {...register("confirmarsenha", { required: "Campo obrigatório" })}
-        />
-        {errors && errors.confirmarsenha && (
-          <span>{errors.confirmarsenha.message}</span>
+        {errors.confirmPassword && (
+          <span>{errors.confirmPassword.message}</span>
         )}
+
         <label htmlFor="bio">Bio:</label>
-        <input
-          type="text"
-          id="bio"
-          {...register("bio", { required: "Campo obrigatório" })}
-        />
-        {errors && errors.bio && <span>{errors.bio.message}</span>}
-        <label htmlFor="contato">Contato:</label>
-        <input
-          type="text"
-          id="contato"
-          {...register("contato", { required: "Campo obrigatório" })}
-        />
-        {errors && errors.contato && <span>{errors.contato.message}</span>}
-        <button type="submit">Entrar</button>
+        <input id="bio" type="text" {...register("bio")} />
+        {errors.bio && <span>{errors.bio.message}</span>}
+
+        <label htmlFor="contact">Contato:</label>
+        <input id="contact" type="text" {...register("contact")} />
+        {errors.contact && <span>{errors.contact.message}</span>}
+
+        <label htmlFor="course_module">Módulo do curso:</label>
+        <select id="course_module" {...register("course_module")}>
+          <option value="Primeiro módulo (Introdução ao Frontend)">
+            Primeiro módulo (Introdução ao Frontend)
+          </option>
+          <option value="Segundo módulo (Frontend Avançado)">
+            Segundo módulo (Frontend Avançado)
+          </option>
+          <option value="Terceiro módulo (Introdução ao Backend)">
+            Terceiro módulo (Introdução ao Backend)
+          </option>
+          <option value="Quarto módulo (Backend Avançado)">
+            Quarto módulo (Backend Avançado)
+          </option>
+        </select>
+        {errors.course_module && <span>{errors.course_module.message}</span>}
+
+        {errors.apiError && <span>{errors.apiError.message}</span>}
+
+        <button type="submit">Registrar</button>
       </form>
+      <ToastContainer />
     </div>
   );
 };

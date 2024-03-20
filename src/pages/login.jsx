@@ -1,9 +1,13 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Logo from "../../public/Logo.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-const FormCard = ({ onSubmit }) => {
+const FormCard = () => {
+  const navigate = useNavigate();
   const {
     handleSubmit,
     register,
@@ -12,15 +16,17 @@ const FormCard = ({ onSubmit }) => {
 
   const handleFormSubmit = async (data) => {
     try {
-      await onSubmit(data);
+      await axios.post("https://kenziehub.herokuapp.com/sessions", data);
+      toast.success("Login realizado com sucesso!");
+      navigate("/dashboard");
     } catch (error) {
-      console.error("Error:", error);
+      toast.error("Erro no login: Verifique seu email e senha.");
     }
   };
 
   return (
     <div>
-      <img src={Logo} alt="" />
+      <img src={Logo} alt="Kenzie Hub Logo" />
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <label htmlFor="email">E-mail:</label>
         <input
@@ -28,7 +34,7 @@ const FormCard = ({ onSubmit }) => {
           id="email"
           {...register("email", { required: "Campo obrigatório" })}
         />
-        {errors && errors.email && <span>{errors.email.message}</span>}
+        {errors.email && <span>{errors.email.message}</span>}
 
         <label htmlFor="password">Senha:</label>
         <input
@@ -36,12 +42,12 @@ const FormCard = ({ onSubmit }) => {
           id="password"
           {...register("password", { required: "Campo obrigatório" })}
         />
-        {errors && errors.password && <span>{errors.password.message}</span>}
+        {errors.password && <span>{errors.password.message}</span>}
 
         <button type="submit">Entrar</button>
-        <h3>Ainda não possui uma conta?</h3>
-        <Link to="/register">Register</Link>
+        <Link to="/register">Ainda não possui uma conta?</Link>
       </form>
+      <ToastContainer />
     </div>
   );
 };
